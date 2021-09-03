@@ -24,7 +24,5 @@ public class Server {
     socketServer.addEventListener(new ConnectionListener(socketServer));
     EventManager.register(new CommandEventListener(socketServer.getCommandHandler()));
     socketServer.bind();
-
-    LOGGER.info("ChatRoom Server started!");
   }
 }
