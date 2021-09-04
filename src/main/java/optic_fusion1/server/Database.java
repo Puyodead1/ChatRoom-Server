@@ -16,7 +16,7 @@
  */
 package optic_fusion1.server;
 
-import optic_fusion1.server.utils.BCrypt;
+import optic_fusion1.common.utils.BCrypt;
 import optic_fusion1.server.utils.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
