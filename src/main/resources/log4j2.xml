@@ -6,7 +6,7 @@
         </Console>
         <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz"
                                  immediateFlush="false">
-            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %minecraftFormatting{%msg}%n"/>
+            <PatternLayout pattern="[%d{HH:mm:ss}] [%t/%level]: %msg%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
                 <OnStartupTriggeringPolicy/>
