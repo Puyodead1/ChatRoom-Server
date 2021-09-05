@@ -18,10 +18,12 @@ package optic_fusion1.server.commands;
 
 import optic_fusion1.commands.command.Command;
 import optic_fusion1.commands.command.CommandSender;
+import optic_fusion1.commands.command.CommandSide;
 import optic_fusion1.common.data.Message;
 import optic_fusion1.packets.OpCode;
 import optic_fusion1.packets.impl.MessagePacket;
 import optic_fusion1.server.Database;
+import optic_fusion1.server.ServerCommandSender;
 import optic_fusion1.server.network.ClientConnection;
 import optic_fusion1.server.network.SocketServer;
 
@@ -30,58 +32,63 @@ import java.util.concurrent.TimeUnit;
 
 public class LoginCommand extends Command {
 
-  private int loginAttempts = 0;
-  private final SocketServer server;
-  private final Database database;
+    private int loginAttempts = 0;
+    private final SocketServer server;
+    private final Database database;
 
-  public LoginCommand(SocketServer server) {
-    super("login");
-    this.server = server;
-    database = server.getDatabase();
-  }
+    public LoginCommand(SocketServer server) {
+        super("login", CommandSide.SERVER, false, true);
+        this.server = server;
+        database = server.getDatabase();
+    }
 
-  @Override
-  public boolean execute(CommandSender sender, String commandLabel, List<String> args) {
-    ClientConnection clientConnection = (ClientConnection) sender;
-    if (loginAttempts == 3) {
-      sendMessage(clientConnection, "You need to wait 10 seconds before trying to login again");
-      return true;
-    }
-    if (args.size() != 2) {
-      sendMessage(clientConnection, "Usage: /login <username> <password>");
-      return true;
-    }
-    if (clientConnection.isLoggedIn()) {
-      sendMessage(clientConnection, "You are already logged in");
-      return true;
-    }
-    String username = args.get(0);
-    String password = args.get(1);
-    if (!database.containsUser(username)) {
-      sendMessage(clientConnection, "Invalid username or password");
-      ratelimit(clientConnection);
-      return true;
-    }
-    if (!database.isPasswordCorrect(username, password)) {
-      sendMessage(clientConnection, "Invalid username or password");
-      ratelimit(clientConnection);
-      return true;
-    }
-    clientConnection.login(username);
-    return true;
-  }
+    @Override
+    public boolean execute(CommandSender sender, String commandLabel, List<String> args) {
+        if(sender instanceof ServerCommandSender) {
+            sender.sendMessage("The server cannot use this command");
+            return false;
+        }
 
-  private void ratelimit(ClientConnection clientConnection) {
-    loginAttempts++;
-    if (loginAttempts == 3) {
-      server.getExecutorService().schedule(() -> {
-        loginAttempts = 0;
-        sendMessage(clientConnection, "You can try to login again");
-      }, 10, TimeUnit.SECONDS);
+        ClientConnection clientConnection = (ClientConnection) sender;
+        if (loginAttempts == 3) {
+            sendMessage(clientConnection, "You need to wait 10 seconds before trying to login again");
+            return false;
+        }
+        if (args.size() != 2) {
+            sendMessage(clientConnection, "Usage: /login <username> <password>");
+            return false;
+        }
+        if (clientConnection.isLoggedIn()) {
+            sendMessage(clientConnection, "You are already logged in");
+            return false;
+        }
+        String username = args.get(0);
+        String password = args.get(1);
+        if (!database.containsUser(username)) {
+            sendMessage(clientConnection, "Invalid username or password");
+            ratelimit(clientConnection);
+            return false;
+        }
+        if (!database.isPasswordCorrect(username, password)) {
+            sendMessage(clientConnection, "Invalid username or password");
+            ratelimit(clientConnection);
+            return false;
+        }
+        clientConnection.login(username);
+        return true;
     }
-  }
 
-  private void sendMessage(ClientConnection clientConnection, String msg) {
-    clientConnection.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, msg).serialize(), MessagePacket.MessageChatType.SYSTEM));
-  }
+    private void ratelimit(ClientConnection clientConnection) {
+        loginAttempts++;
+        if (loginAttempts == 3) {
+            server.getExecutorService().schedule(() -> {
+                loginAttempts = 0;
+                sendMessage(clientConnection, "You can try to login again");
+            }, 10, TimeUnit.SECONDS);
+        }
+    }
+
+    private void sendMessage(ClientConnection clientConnection, String msg) {
+        clientConnection.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, msg).serialize(), MessagePacket.MessageChatType.SYSTEM));
+    }
 }

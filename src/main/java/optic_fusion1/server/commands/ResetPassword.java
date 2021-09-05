@@ -21,21 +21,22 @@ import optic_fusion1.commands.command.CommandPermissionLevel;
 import optic_fusion1.commands.command.CommandSender;
 import optic_fusion1.commands.command.CommandSide;
 import optic_fusion1.common.data.Message;
+import optic_fusion1.common.utils.BCrypt;
 import optic_fusion1.packets.OpCode;
 import optic_fusion1.packets.impl.MessagePacket;
-import optic_fusion1.server.ServerCommandSender;
 import optic_fusion1.server.network.ClientConnection;
 import optic_fusion1.server.network.SocketServer;
 import optic_fusion1.server.utils.RandomString;
 
 import java.util.List;
+import java.util.UUID;
 
-public class GenAccCommand extends Command {
+public class ResetPassword extends Command {
 
   private final SocketServer server;
 
-  public GenAccCommand(SocketServer server) {
-    super("genacc", CommandSide.SERVER, CommandPermissionLevel.OPERATOR, true, false);
+  public ResetPassword(SocketServer server) {
+    super("resetpasswd", CommandSide.SERVER, CommandPermissionLevel.OPERATOR, true, false);
     this.server = server;
   }
 
@@ -45,16 +46,18 @@ public class GenAccCommand extends Command {
       return false;
     }
 
-    // TODO: allow any user with isOp permission to run the command
-
-    RandomString randomString = new RandomString();
-    String username = randomString.nextString();
-    String password = randomString.nextString();
-    boolean created = server.createAccount(sender, username, password);
-    if (created) {
-      sender.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "Username: " + username + " Password: " + password).serialize(), MessagePacket.MessageChatType.SYSTEM));
+    if(args.size() != 2) {
+      sender.sendMessage("Usage: /resetpasswd <uuid> <new password>");
+      return false;
     }
+
+    // TODO: allow any user with isOp permission to run the command
+    UUID uuid = UUID.fromString(args.get(0));
+    String password = args.get(1);
+    String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+    server.getDatabase().updatePassword(uuid, hashedPassword);
+    // TODO: if the user is currently connected, disconnect them and have them login again?
+    sender.sendMessage(String.format("Password updated for user with UUID %s", uuid));
     return true;
   }
-
 }

@@ -19,8 +19,10 @@ package optic_fusion1.server.network;
 import me.legrange.haveibeenpwned.HaveIBeenPwndApi;
 import me.legrange.haveibeenpwned.HaveIBeenPwndBuilder;
 import me.legrange.haveibeenpwned.HaveIBeenPwndException;
+import net.lenni0451.asmevents.EventManager;
 import optic_fusion1.commands.CommandHandler;
 import optic_fusion1.commands.command.Command;
+import optic_fusion1.commands.command.CommandSender;
 import optic_fusion1.common.data.Message;
 import optic_fusion1.common.utils.BCrypt;
 import optic_fusion1.packets.IPacket;
@@ -31,9 +33,9 @@ import optic_fusion1.packets.impl.PingPacket;
 import optic_fusion1.packets.utils.RSACrypter;
 import optic_fusion1.server.Database;
 import optic_fusion1.server.Server;
-import optic_fusion1.server.commands.GenAccCommand;
-import optic_fusion1.server.commands.LoginCommand;
-import optic_fusion1.server.commands.RegisterCommand;
+import optic_fusion1.server.ServerCommandSender;
+import optic_fusion1.server.commands.*;
+import optic_fusion1.server.network.events.CommandEvent;
 import optic_fusion1.server.network.listeners.ServerEventListener;
 import optic_fusion1.server.utils.Utils;
 import org.apache.logging.log4j.LogManager;
@@ -149,7 +151,7 @@ public class SocketServer {
         });
         this.socketAcceptor.start();
 
-      LOGGER.info("ChatRoom Server started!");
+        LOGGER.info("ChatRoom Server started!");
 
         this.timer = new Timer();
         this.timer.schedule(this.pingTimer = new TimerTask() {
@@ -330,6 +332,8 @@ public class SocketServer {
         registerCommand(new LoginCommand(this));
         registerCommand(new RegisterCommand(this));
         registerCommand(new GenAccCommand(this));
+        registerCommand(new ResetPassword(this));
+        registerCommand(new UUIDLookup(this));
     }
 
     public void registerCommand(Command command) {
@@ -348,9 +352,9 @@ public class SocketServer {
         return EXECUTOR_SERVICE;
     }
 
-    public boolean createAccount(ClientConnection client, String userName, String password) {
+    public boolean createAccount(CommandSender sender, String userName, String password) {
         if (DATABASE.containsUser(userName)) {
-            client.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "The username '" + userName + "' is already taken").serialize(), MessagePacket.MessageChatType.SYSTEM));
+            sender.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "The username '" + userName + "' is already taken").serialize(), MessagePacket.MessageChatType.SYSTEM));
             LOGGER.info(userName + " is already set");
             return false;
         }
@@ -358,7 +362,7 @@ public class SocketServer {
             HaveIBeenPwndApi hibp = HaveIBeenPwndBuilder.create("HaveIBeenPwnd").build();
             try {
                 if (hibp.isPlainPasswordPwned(password)) {
-                    client.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "The password is insecure use something else").serialize(), MessagePacket.MessageChatType.SYSTEM));
+                    sender.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "The password is insecure use something else").serialize(), MessagePacket.MessageChatType.SYSTEM));
                     return false;
                 }
             } catch (HaveIBeenPwndException ex) {
@@ -366,8 +370,12 @@ public class SocketServer {
             }
         }
         DATABASE.insertUser(userName, UUID.randomUUID(), BCrypt.hashpw(password, BCrypt.gensalt()));
-        client.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "Registered the username " + userName).serialize(), MessagePacket.MessageChatType.SYSTEM));
-        LOGGER.info("Registered username " + userName);
+        sender.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "Registered the username " + userName).serialize(), MessagePacket.MessageChatType.SYSTEM));
+
+        // only log to the console if the console isnt the sender
+        if(sender instanceof ClientConnection) {
+            LOGGER.debug("Registered username " + userName);
+        }
         return true;
     }
 
@@ -394,8 +402,11 @@ public class SocketServer {
                 continue;
             }
 
-            LOGGER.info(line);
-            //broadcastPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, line).serialize(), MessagePacket.MessageChatType.SERVER));
+            if (line.startsWith("/")) {
+                EventManager.call(new CommandEvent(new ServerCommandSender(), line.substring(1)));
+            } else {
+                broadcastPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, line).serialize(), MessagePacket.MessageChatType.SERVER));
+            }
         }
     }
 

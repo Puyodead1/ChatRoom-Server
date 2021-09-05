@@ -2,15 +2,15 @@ package optic_fusion1.server.network.events;
 
 import net.lenni0451.asmevents.event.IEvent;
 import net.lenni0451.asmevents.event.types.ICancellableEvent;
-import optic_fusion1.server.network.ClientConnection;
+import optic_fusion1.commands.command.CommandSender;
 
 public class CommandEvent implements IEvent, ICancellableEvent {
 
     private boolean cancelled = false;
     private final String command;
-    private final ClientConnection sender;
+    private final CommandSender sender;
 
-    public CommandEvent(ClientConnection sender, String command) {
+    public CommandEvent(CommandSender sender, String command) {
         this.sender = sender;
         this.command = command;
     }
@@ -25,7 +25,7 @@ public class CommandEvent implements IEvent, ICancellableEvent {
         this.cancelled = cancelled;
     }
 
-    public ClientConnection getSender() {
+    public CommandSender getSender() {
         return sender;
     }
 

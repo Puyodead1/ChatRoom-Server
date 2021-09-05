@@ -175,6 +175,7 @@ public class ClientConnection implements CommandSender {
     this.dataOutputStream.write(data);
   }
 
+  @Override
   public void sendPacket(final IPacket packet) {
     if (this.terminated) {
       throw new IllegalStateException("Client connection has been terminated");

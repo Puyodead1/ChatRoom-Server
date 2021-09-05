@@ -18,37 +18,44 @@ package optic_fusion1.server.commands;
 
 import optic_fusion1.commands.command.Command;
 import optic_fusion1.commands.command.CommandSender;
+import optic_fusion1.commands.command.CommandSide;
 import optic_fusion1.common.data.Message;
 import optic_fusion1.packets.OpCode;
 import optic_fusion1.packets.impl.MessagePacket;
-import optic_fusion1.server.network.ClientConnection;
 import optic_fusion1.server.network.SocketServer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 public class RegisterCommand extends Command {
 
-  private final SocketServer server;
+    private final SocketServer server;
 
-  public RegisterCommand(SocketServer server) {
-    super("register");
-    this.server = server;
-  }
+    private final ArrayList<String> restrictedUsernames = new ArrayList<>(Arrays.asList("admin", "sysadmin", "system", "server", "serveradmin", "systemadmin", "administrator"));
 
-  @Override
-  public boolean execute(CommandSender sender, String commandLabel, List<String> args) {
-    ClientConnection client = (ClientConnection) sender;
-    if (args.size() != 3) {
-      client.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "Usage: /register <username> <password> <password again>").serialize(), MessagePacket.MessageChatType.SYSTEM));
-      return true;
+    public RegisterCommand(SocketServer server) {
+        super("register", CommandSide.SERVER, true, true);
+        this.server = server;
     }
-    if (!Objects.equals(args.get(1), args.get(2))) {
-      client.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "Passwords do not match").serialize(), MessagePacket.MessageChatType.SYSTEM));
-      return true;
+
+    @Override
+    public boolean execute(CommandSender sender, String commandLabel, List<String> args) {
+        if (args.size() != 3) {
+            sender.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "Usage: /register <username> <password> <password again>").serialize(), MessagePacket.MessageChatType.SYSTEM));
+            return false;
+        }
+        if (!Objects.equals(args.get(1), args.get(2))) {
+            sender.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "Passwords do not match").serialize(), MessagePacket.MessageChatType.SYSTEM));
+            return false;
+        }
+        if (restrictedUsernames.contains(args.get(0).toLowerCase())) {
+            sender.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "Username is not allowed, please choose a different one.").serialize(), MessagePacket.MessageChatType.SYSTEM));
+            return false;
+        }
+        server.createAccount(sender, args.get(0), args.get(1));
+        return true;
     }
-    server.createAccount(client, args.get(0), args.get(1));
-    return true;
-  }
 
 }
