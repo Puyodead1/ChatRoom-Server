@@ -52,7 +52,7 @@ public class Database {
             executePrepareStatement();
 
             // handle creating a server admin user
-          boolean serverUserExists = containsUser("Server Admin");
+          boolean serverUserExists = containsUser("admin");
             if (!serverUserExists) {
                 LOGGER.debug("A server user does not exist, creating one...");
                 createServerOpUser();
@@ -165,7 +165,7 @@ public class Database {
         return false;
     }
 
-    private static final String UPDATE_NICKNAME = "UPDATE users SET nickname=? WHERE uuid=?";
+    private static final String UPDATE_NICKNAME = "UPDATE users SET nickname = ? WHERE uuid = ?";
 
     public void updateNickname(UUID uniqueId, String nickname) {
         try {

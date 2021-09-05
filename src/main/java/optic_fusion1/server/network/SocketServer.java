@@ -405,7 +405,8 @@ public class SocketServer {
             if (line.startsWith("/")) {
                 EventManager.call(new CommandEvent(new ServerCommandSender(), line.substring(1)));
             } else {
-                broadcastPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, line).serialize(), MessagePacket.MessageChatType.SERVER));
+                LOGGER.info(String.format("* You: %s", line));
+                broadcastPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, line).serialize(), MessagePacket.MessageChatType.SYSTEM ));
             }
         }
     }

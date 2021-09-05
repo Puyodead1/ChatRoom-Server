@@ -43,12 +43,12 @@ public class PacketListener implements ServerEventListener {
     public void onPacketReceive(ClientConnection clientConnection, IPacket packet) {
         if (packet instanceof MessagePacket messagePacket) {
             OpCode opCode = messagePacket.getOpCode();
-            LOGGER.info("Type: " + opCode + "; Message: " + messagePacket.getMessage());
+            LOGGER.debug("Type: " + opCode + "; Message: " + messagePacket.getMessage());
 
             switch (opCode) {
                 case MESSAGE -> {
                     Message message = Message.deserialize(messagePacket.getMessage());
-                    LOGGER.info(message.getContent());
+                    LOGGER.debug("Message Content: " + message.getContent());
                     if (message.getContent().startsWith("/")) {
                         EventManager.call(new CommandEvent(clientConnection, message.getContent().substring(1)));
                     } else if (!clientConnection.isLoggedIn()) {
