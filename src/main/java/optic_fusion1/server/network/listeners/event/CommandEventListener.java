@@ -14,22 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package optic_fusion1.server;
+package optic_fusion1.server.network.listeners.event;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.fusesource.jansi.AnsiConsole;
+import net.lenni0451.asmevents.event.EventTarget;
+import optic_fusion1.commands.CommandHandler;
+import optic_fusion1.server.network.events.CommandEvent;
 
-import java.io.IOException;
+public record CommandEventListener(CommandHandler commandHandler) {
 
-public class Main {
-
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    public static void main(String[] args) throws IOException {
-        AnsiConsole.systemInstall();
-        LOGGER.info("Starting server...");
-        Server server = new Server();
-        server.start();
+  @EventTarget()
+  public void onEvent(CommandEvent event) {
+    if (event.isCancelled()) {
+      return;
     }
+    commandHandler.executeCommand(event.getSender(), event.getCommand());
+  }
 }
