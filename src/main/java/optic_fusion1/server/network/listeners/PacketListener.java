@@ -22,7 +22,6 @@ import optic_fusion1.common.data.User;
 import optic_fusion1.packets.IPacket;
 import optic_fusion1.packets.OpCode;
 import optic_fusion1.packets.impl.MessagePacket;
-import optic_fusion1.server.Main;
 import optic_fusion1.server.network.ClientConnection;
 import optic_fusion1.server.network.SocketServer;
 import optic_fusion1.server.network.events.CommandEvent;
