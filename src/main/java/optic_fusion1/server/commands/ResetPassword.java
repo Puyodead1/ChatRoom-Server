@@ -20,14 +20,9 @@ import optic_fusion1.commands.command.Command;
 import optic_fusion1.commands.command.CommandPermissionLevel;
 import optic_fusion1.commands.command.CommandSender;
 import optic_fusion1.commands.command.CommandSide;
-import optic_fusion1.common.data.Message;
 import optic_fusion1.common.utils.BCrypt;
-import optic_fusion1.packets.OpCode;
-import optic_fusion1.packets.impl.MessagePacket;
 import optic_fusion1.server.network.ClientConnection;
 import optic_fusion1.server.network.SocketServer;
-import optic_fusion1.server.utils.RandomString;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -46,7 +41,7 @@ public class ResetPassword extends Command {
       return false;
     }
 
-    if(args.size() != 2) {
+    if (args.size() != 2) {
       sender.sendMessage("Usage: /resetpasswd <uuid> <new password>");
       return false;
     }
@@ -56,7 +51,8 @@ public class ResetPassword extends Command {
     String password = args.get(1);
     String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
     server.getDatabase().updatePassword(uuid, hashedPassword);
-    // TODO: if the user is currently connected, disconnect them and have them login again?
+    // TODO: if the user is currently connected, disconnect them and have them login
+    // again?
     sender.sendMessage(String.format("Password updated for user with UUID %s", uuid));
     return true;
   }

@@ -16,11 +16,14 @@
  */
 package optic_fusion1.server.utils;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import optic_fusion1.server.Main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
@@ -37,7 +40,7 @@ public final class Utils {
       LOGGER.warn(String.format("The resource '%s' cannot be found!", resource));
       return;
     }
-    try ( FileOutputStream fos = new FileOutputStream(destination)) {
+    try (FileOutputStream fos = new FileOutputStream(destination)) {
       byte[] buf = new byte[2048];
       int r;
       while (-1 != (r = ddlStream.read(buf))) {
@@ -72,7 +75,7 @@ public final class Utils {
 
     try {
       if (!outFile.exists() || replace) {
-        try ( OutputStream out = new FileOutputStream(outFile)) {
+        try (OutputStream out = new FileOutputStream(outFile)) {
           byte[] buf = new byte[1024];
           int len;
           while ((len = in.read(buf)) > 0) {
@@ -102,7 +105,8 @@ public final class Utils {
   }
 
   public static String getJarDirectory() throws URISyntaxException {
-    return new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath().getParent().toString();
+    return new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath().getParent()
+        .toString();
   }
 
   public static File getFile(String folderName, String fileName) throws URISyntaxException {

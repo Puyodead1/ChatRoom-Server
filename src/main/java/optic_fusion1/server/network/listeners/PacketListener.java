@@ -22,7 +22,6 @@ import optic_fusion1.common.data.User;
 import optic_fusion1.packets.IPacket;
 import optic_fusion1.packets.OpCode;
 import optic_fusion1.packets.impl.MessagePacket;
-import optic_fusion1.server.Main;
 import optic_fusion1.server.network.ClientConnection;
 import optic_fusion1.server.network.SocketServer;
 import optic_fusion1.server.network.events.CommandEvent;
@@ -52,9 +51,12 @@ public class PacketListener implements ServerEventListener {
                     if (message.getContent().startsWith("/")) {
                         EventManager.call(new CommandEvent(clientConnection, message.getContent().substring(1)));
                     } else if (!clientConnection.isLoggedIn()) {
-                        clientConnection.sendPacket(new MessagePacket(OpCode.LOGIN_REQUIRED, "", MessagePacket.MessageChatType.SYSTEM));
+                        clientConnection.sendPacket(
+                                new MessagePacket(OpCode.LOGIN_REQUIRED, "", MessagePacket.MessageChatType.SYSTEM));
                     } else {
-                        server.broadcastPacket(new MessagePacket(OpCode.MESSAGE, new Message(message.getUser(), message.getContent()).serialize(), MessagePacket.MessageChatType.USER));
+                        server.broadcastPacket(new MessagePacket(OpCode.MESSAGE,
+                                new Message(message.getUser(), message.getContent()).serialize(),
+                                MessagePacket.MessageChatType.USER));
                         LOGGER.info(clientConnection.getUsername() + ": " + messagePacket.getMessage());
                     }
                 }

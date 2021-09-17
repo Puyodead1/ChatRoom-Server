@@ -23,7 +23,6 @@ import optic_fusion1.commands.command.CommandSide;
 import optic_fusion1.common.data.Message;
 import optic_fusion1.packets.OpCode;
 import optic_fusion1.packets.impl.MessagePacket;
-import optic_fusion1.server.ServerCommandSender;
 import optic_fusion1.server.network.ClientConnection;
 import optic_fusion1.server.network.SocketServer;
 import optic_fusion1.server.utils.RandomString;
@@ -46,13 +45,14 @@ public class GenAccCommand extends Command {
     }
 
     // TODO: allow any user with isOp permission to run the command
-
     RandomString randomString = new RandomString();
     String username = randomString.nextString();
     String password = randomString.nextString();
     boolean created = server.createAccount(sender, username, password);
     if (created) {
-      sender.sendPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "Username: " + username + " Password: " + password).serialize(), MessagePacket.MessageChatType.SYSTEM));
+      sender.sendPacket(new MessagePacket(OpCode.MESSAGE,
+          new Message(null, "Username: " + username + " Password: " + password).serialize(),
+          MessagePacket.MessageChatType.SYSTEM));
     }
     return true;
   }

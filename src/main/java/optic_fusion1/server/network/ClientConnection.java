@@ -22,10 +22,8 @@ import optic_fusion1.packets.IPacket;
 import optic_fusion1.packets.OpCode;
 import optic_fusion1.packets.impl.MessagePacket;
 import optic_fusion1.packets.utils.RSACrypter;
-import optic_fusion1.server.Main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -45,12 +43,10 @@ public class ClientConnection implements CommandSender {
   private final InetAddress address;
   private final DataInputStream dataInputStream;
   private final DataOutputStream dataOutputStream;
-
   private PrivateKey decryptionKey = null;
   private PublicKey encryptionKey = null;
   private int aesKeyLength;
   private boolean useEncryption;
-
   private long ping = -1;
   private boolean terminated = false;
 
@@ -165,7 +161,8 @@ public class ClientConnection implements CommandSender {
       try {
         data = RSACrypter.encrypt(this.encryptionKey, data, aesKeyLength);
       } catch (Exception e) {
-        new IOException("Could not encrypt packet data for client " + this.socket.getInetAddress().getHostAddress(), e).printStackTrace();
+        new IOException("Could not encrypt packet data for client " + this.socket.getInetAddress().getHostAddress(), e)
+            .printStackTrace();
       }
     }
     if (data.length > this.server.getMaxPacketSize()) {
@@ -195,7 +192,7 @@ public class ClientConnection implements CommandSender {
   // Optic_Fusion1 - start
   @Override
   public void sendMessage(String message) {
-    //  sendPacket(new MessagePacket(MessagePacket.Type.CHAT, message));
+    sendPacket(new MessagePacket(OpCode.MESSAGE, message, MessagePacket.MessageChatType.SYSTEM));
   }
 
   public boolean isLoggedIn() {
@@ -225,12 +222,10 @@ public class ClientConnection implements CommandSender {
   }
 
   /*
-//  public void setNickname(String nickname) {
-//    String oldNickname = this.nickname.isEmpty() ? username : this.nickname;
-//    this.nickname = nickname;
-//    server.getDatabase().updateNickname(uniqueId, nickname);
-//    LOGGER.info(oldNickname + " changed their name to " + nickname);
-//  }
+   * // public void setNickname(String nickname) { // String oldNickname =
+   * this.nickname.isEmpty() ? username : this.nickname; // this.nickname =
+   * nickname; // server.getDatabase().updateNickname(uniqueId, nickname); //
+   * LOGGER.info(oldNickname + " changed their name to " + nickname); // }
    */
   public UUID getUniqueId() {
     return uniqueId;
