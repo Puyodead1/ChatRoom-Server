@@ -60,40 +60,40 @@ public class ClientConnection implements CommandSender {
   public ClientConnection(final SocketServer server, final Socket socket) {
     this.server = server;
     this.socket = socket;
-    this.address = socket.getInetAddress();
+    address = socket.getInetAddress();
     try {
-      this.dataInputStream = new DataInputStream(socket.getInputStream());
-      this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
+      dataInputStream = new DataInputStream(socket.getInputStream());
+      dataOutputStream = new DataOutputStream(socket.getOutputStream());
     } catch (Exception e) {
-      this.terminateConnection();
+      terminateConnection();
       throw new IllegalStateException("Socket is closed or not ready yet", e);
     }
-    this.aesKeyLength = 256;
-    this.useEncryption = true;
+    aesKeyLength = 256;
+    useEncryption = true;
   }
 
   public Socket getSocket() {
-    return this.socket;
+    return socket;
   }
 
   public InetAddress getAddress() {
-    return this.address;
+    return address;
   }
 
   public DataInputStream getInputStream() {
-    return this.dataInputStream;
+    return dataInputStream;
   }
 
   public DataOutputStream getOutputStream() {
-    return this.dataOutputStream;
+    return dataOutputStream;
   }
 
   public boolean terminateConnection() {
-    this.terminated = true;
+    terminated = true;
     try {
-      this.dataInputStream.close();
-      this.dataOutputStream.close();
-      this.socket.close();
+      dataInputStream.close();
+      dataOutputStream.close();
+      socket.close();
       return true;
     } catch (Exception ignored) {
     }
@@ -105,11 +105,11 @@ public class ClientConnection implements CommandSender {
   }
 
   public long getPing() {
-    return this.ping;
+    return ping;
   }
 
   public void setDecryptionKey(final PrivateKey decryptionKey) {
-    if (this.encryptionKey != null) {
+    if (encryptionKey != null) {
       throw new IllegalStateException("Decryption key is already set");
     }
 
@@ -117,11 +117,11 @@ public class ClientConnection implements CommandSender {
   }
 
   public PrivateKey getDecryptionKey() {
-    return this.decryptionKey;
+    return decryptionKey;
   }
 
   public void setEncryptionKey(final PublicKey encryptionKey) {
-    if (this.encryptionKey != null) {
+    if (encryptionKey != null) {
       throw new IllegalStateException("Encryption key is already set");
     }
 
@@ -129,7 +129,7 @@ public class ClientConnection implements CommandSender {
   }
 
   public PublicKey getEncryptionKey() {
-    return this.encryptionKey;
+    return encryptionKey;
   }
 
   public void setAESKeyLength(final int aesKeyLength) {
@@ -137,54 +137,54 @@ public class ClientConnection implements CommandSender {
   }
 
   public int getAESKeyLength() {
-    return this.aesKeyLength;
+    return aesKeyLength;
   }
 
   public void useNoEncryption() {
-    if (this.encryptionKey != null || this.decryptionKey != null) {
+    if (encryptionKey != null || decryptionKey != null) {
       throw new IllegalStateException("Encryption is already initialized");
     }
 
-    this.useEncryption = false;
+    useEncryption = false;
   }
 
   public boolean isUsingEncryption() {
-    return this.useEncryption;
+    return useEncryption;
   }
 
   public void sendRawPacket(byte[] data) throws IOException {
-    if (this.terminated) {
+    if (terminated) {
       throw new IllegalStateException("Client connection has been terminated");
     }
 
-    if (this.encryptionKey != null && this.useEncryption) {
+    if (encryptionKey != null && useEncryption) {
       try {
-        data = RSACrypter.encrypt(this.encryptionKey, data, aesKeyLength);
+        data = RSACrypter.encrypt(encryptionKey, data, aesKeyLength);
       } catch (Exception e) {
-        new IOException("Could not encrypt packet data for client " + this.socket.getInetAddress().getHostAddress(), e).printStackTrace();
+        new IOException("Could not encrypt packet data for client " + socket.getInetAddress().getHostAddress(), e).printStackTrace();
       }
     }
-    if (data.length > this.server.getMaxPacketSize()) {
-      throw new RuntimeException("Packet size over maximum: " + data.length + " > " + this.server.getMaxPacketSize());
+    if (data.length > server.getMaxPacketSize()) {
+      throw new RuntimeException("Packet size over maximum: " + data.length + " > " + server.getMaxPacketSize());
     }
-    this.dataOutputStream.writeInt(data.length);
-    this.dataOutputStream.write(data);
+    dataOutputStream.writeInt(data.length);
+    dataOutputStream.write(data);
   }
 
   @Override
   public void sendPacket(final IPacket packet) {
-    if (this.terminated) {
+    if (terminated) {
       throw new IllegalStateException("Client connection has been terminated");
     }
 
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       DataOutputStream dos = new DataOutputStream(baos);
-      dos.writeUTF(this.server.getPacketRegister().getPacketLabel(packet.getClass()));
+      dos.writeUTF(server.getPacketRegister().getPacketLabel(packet.getClass()));
       packet.writePacketData(dos);
-      this.sendRawPacket(baos.toByteArray());
+      sendRawPacket(baos.toByteArray());
     } catch (Exception e) {
-      new IOException("Could not serialize packet for " + this.address.getHostAddress(), e).printStackTrace();
+      new IOException("Could not serialize packet for " + address.getHostAddress(), e).printStackTrace();
     }
   }
 
@@ -199,16 +199,16 @@ public class ClientConnection implements CommandSender {
   }
 
   public void login(String username) {
-    this.loggedIn = true;
-    this.username = username;
-    this.uniqueId = server.getDatabase().getUUID(username);
+    loggedIn = true;
+    username = username;
+    uniqueId = server.getDatabase().getUUID(username);
 
-    this.user = new User(uniqueId, username);
+    user = new User(uniqueId, username);
 
     LOGGER.info(String.format("%s has logged in from %s", username, getAddress()));
 
     // send the client their user information
-    this.sendPacket(new MessagePacket(OpCode.LOGGED_IN, user.serialize(), MessagePacket.MessageChatType.SYSTEM));
+    sendPacket(new MessagePacket(OpCode.LOGGED_IN, user.serialize(), MessagePacket.MessageChatType.SYSTEM));
 
     // broadcast to everyone that the client has joined
     server.broadcastPacket(new MessagePacket(OpCode.LOGIN, user.serialize(), MessagePacket.MessageChatType.SYSTEM));

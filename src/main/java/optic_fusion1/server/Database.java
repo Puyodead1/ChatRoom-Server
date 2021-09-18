@@ -79,8 +79,8 @@ public class Database {
 
   public void createServerOpUser() {
     try {
-      final String adminPassword = new RandomString().nextString();
-      final String adminUUID = UUID.randomUUID().toString();
+      String adminPassword = new RandomString().nextString();
+      String adminUUID = UUID.randomUUID().toString();
       PreparedStatement statement = connection.prepareStatement(INSERT_SERVER_OP_USER);
       statement.setString(1, "admin");
       statement.setString(2, adminUUID);
