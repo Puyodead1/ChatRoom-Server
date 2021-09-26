@@ -16,14 +16,11 @@
  */
 package optic_fusion1.server.utils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import optic_fusion1.server.Main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
