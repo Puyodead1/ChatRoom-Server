@@ -87,7 +87,7 @@ public class SocketServer {
   private static final CommandHandler COMMAND_HANDLER = new CommandHandler();
   private static final Properties SERVER_PROPERTIES = new Properties();
   private static final Database DATABASE = new Database();
-  private static final boolean LOGIN_REQUIRED = true;
+  private boolean loginRequired = true;
   private String serverIP = "";
   private boolean allowInsecurePasswords = false;
   private final Server server;
@@ -95,26 +95,26 @@ public class SocketServer {
 
   public SocketServer(Server server) {
     this.server = server;
-    clients = new ConcurrentHashMap<>();
-    eventListener = new CopyOnWriteArrayList<>();
-    packetRegister = new PacketRegister();
+    this.clients = new ConcurrentHashMap<>();
+    this.eventListener = new CopyOnWriteArrayList<>();
+    this.packetRegister = new PacketRegister();
     registerCommands();
     loadPropertiesFile();
   }
 
   public void bind() throws IOException {
-    if (socket != null && socket.isBound()) {
-      throw new IllegalStateException("Server socket is already bound to port " + port);
+    if (this.socket != null && this.socket.isBound()) {
+      throw new IllegalStateException("Server socket is already bound to port " + this.port);
     }
-    socket = new ServerSocket();
-    socket.bind(new InetSocketAddress(serverIP, port));
-    socketAcceptor = new Thread(() -> {
-      while (!socketAcceptor.isInterrupted() && socket.isBound()) {
+    this.socket = new ServerSocket();
+    this.socket.bind(new InetSocketAddress(serverIP, port));
+    this.socketAcceptor = new Thread(() -> {
+      while (!this.socketAcceptor.isInterrupted() && this.socket.isBound()) {
         try {
-          Socket acceptedSocket = socket.accept();
+          Socket acceptedSocket = this.socket.accept();
           ClientConnection clientConnection = new ClientConnection(this, acceptedSocket);
           { //Call event
-            for (ServerEventListener serverEventListener : eventListener.toArray(new ServerEventListener[0])) {
+            for (ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
               try {
                 serverEventListener.onSocketPreConnect(clientConnection);
               } catch (Throwable t) {
@@ -124,11 +124,11 @@ public class SocketServer {
           }
 
           Thread clientListener;
-          clients.put(clientConnection, clientListener = new Thread() {
+          this.clients.put(clientConnection, clientListener = new Thread() {
             @Override
             public void run() {
               DataInputStream dataInputStream = clientConnection.getInputStream();
-              while (!isInterrupted() && acceptedSocket.isConnected() && !socketAcceptor.isInterrupted()) {
+              while (!this.isInterrupted() && acceptedSocket.isConnected() && !socketAcceptor.isInterrupted()) {
                 try {
                   int packetLength = dataInputStream.readInt();
                   if (packetLength > maxPacketSize) {
@@ -156,7 +156,7 @@ public class SocketServer {
                 }
               }
               onClientDisconnect(clientConnection);
-              interrupt();
+              this.interrupt();
             }
           });
           clientListener.start();
@@ -167,12 +167,12 @@ public class SocketServer {
         }
       }
     });
-    socketAcceptor.start();
+    this.socketAcceptor.start();
 
     LOGGER.info("ChatRoom Server started!");
 
-    timer = new Timer();
-    timer.schedule(pingTimer = new TimerTask() {
+    this.timer = new Timer();
+    this.timer.schedule(this.pingTimer = new TimerTask() {
       @Override
       public void run() {
         for (ClientConnection clientConnection : clients.keySet()) {
@@ -187,18 +187,18 @@ public class SocketServer {
   }
 
   public void stop() throws IOException {
-    socketAcceptor.interrupt();
-    socket.close();
+    this.socketAcceptor.interrupt();
+    this.socket.close();
 
     //Cleanup
-    pingTimer.cancel();
-    for (ClientConnection clientConnection : clients.keySet()) {
+    this.pingTimer.cancel();
+    for (ClientConnection clientConnection : this.clients.keySet()) {
       clientConnection.terminateConnection();
     }
-    clients.clear();
+    this.clients.clear();
 
     { //Call event
-      for (ServerEventListener serverEventListener : eventListener.toArray(new ServerEventListener[0])) {
+      for (ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
         try {
           serverEventListener.onServerClose();
         } catch (Throwable t) {
@@ -209,7 +209,7 @@ public class SocketServer {
   }
 
   public void addEventListener(final ServerEventListener serverEventListener) {
-    eventListener.add(serverEventListener);
+    this.eventListener.add(serverEventListener);
   }
 
   public void setMaxPacketSize(final int maxPacketSize) {
@@ -217,19 +217,19 @@ public class SocketServer {
   }
 
   public int getMaxPacketSize() {
-    return maxPacketSize;
+    return this.maxPacketSize;
   }
 
   public PacketRegister getPacketRegister() {
-    return packetRegister;
+    return this.packetRegister;
   }
 
   private void onClientDisconnect(final ClientConnection clientConnection) {
     clientConnection.terminateConnection();
-    clients.remove(clientConnection);
+    this.clients.remove(clientConnection);
 
     { //Call event
-      for (ServerEventListener serverEventListener : eventListener.toArray(new ServerEventListener[0])) {
+      for (ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
         try {
           serverEventListener.onSocketDisconnect(clientConnection);
         } catch (Throwable t) {
@@ -259,7 +259,7 @@ public class SocketServer {
         }
 
         { //Call event
-          for (ServerEventListener serverEventListener : eventListener.toArray(new ServerEventListener[0])) {
+          for (ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
             try {
               serverEventListener.onSocketConnectionEstablished(clientConnection);
             } catch (Throwable t) {
@@ -285,7 +285,7 @@ public class SocketServer {
     try {
       DataInputStream dis = new DataInputStream(new ByteArrayInputStream(packet));
       String packetLabel = dis.readUTF();
-      Class<? extends IPacket> packetClass = packetRegister.getPacketClass(packetLabel);
+      Class<? extends IPacket> packetClass = this.packetRegister.getPacketClass(packetLabel);
       IPacket packetObject = packetClass.newInstance();
       packetObject.readPacketData(dis);
 
@@ -295,7 +295,7 @@ public class SocketServer {
       }
 
       { //Call event
-        for (ServerEventListener serverEventListener : eventListener.toArray(new ServerEventListener[0])) {
+        for (ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
           try {
             serverEventListener.onPacketReceive(clientConnection, packetObject);
           } catch (Throwable t) {
@@ -306,7 +306,7 @@ public class SocketServer {
     } catch (Exception e) {
       e.printStackTrace();
       { //Call event
-        for (ServerEventListener serverEventListener : eventListener.toArray(new ServerEventListener[0])) {
+        for (ServerEventListener serverEventListener : this.eventListener.toArray(new ServerEventListener[0])) {
           try {
             serverEventListener.onRawPacketReceive(clientConnection, packet);
           } catch (Throwable t) {
@@ -318,11 +318,11 @@ public class SocketServer {
   }
 
   public ClientConnection[] getClients() {
-    return clients.keySet().toArray(new ClientConnection[0]);
+    return this.clients.keySet().toArray(new ClientConnection[0]);
   }
 
   public void broadcastRawPacket(final byte[] packet) {
-    for (ClientConnection clientConnection : clients.keySet()) {
+    for (ClientConnection clientConnection : this.clients.keySet()) {
       try {
         clientConnection.sendRawPacket(packet);
       } catch (Exception e) {
@@ -332,7 +332,7 @@ public class SocketServer {
   }
 
   public void broadcastPacket(final IPacket packet) {
-    for (ClientConnection clientConnection : clients.keySet()) {
+    for (ClientConnection clientConnection : this.clients.keySet()) {
       try {
         clientConnection.sendPacket(packet);
       } catch (Exception e) {
@@ -342,8 +342,8 @@ public class SocketServer {
   }
 
   // Optic_Fusion1 - start
-  public boolean isLOGIN_REQUIRED() {
-    return LOGIN_REQUIRED;
+  public boolean isLoginRequired() {
+    return loginRequired;
   }
 
   public void registerCommands() {
@@ -423,8 +423,8 @@ public class SocketServer {
       if (line.startsWith("/")) {
         EventManager.call(new CommandEvent(new ServerCommandSender(), line.substring(1)));
       } else {
-        LOGGER.info(String.format("* You: %s", "&6" + line));
-        broadcastPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, "&6" + line).serialize(), MessagePacket.MessageChatType.SYSTEM));
+        LOGGER.info(String.format("* You: %s", line));
+        broadcastPacket(new MessagePacket(OpCode.MESSAGE, new Message(null, line).serialize(), MessagePacket.MessageChatType.SYSTEM));
       }
     }
   }

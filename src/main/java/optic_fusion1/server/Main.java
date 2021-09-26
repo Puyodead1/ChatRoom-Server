@@ -24,12 +24,12 @@ import java.io.IOException;
 
 public class Main {
 
-  private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
-  public static void main(String[] args) throws IOException {
-    AnsiConsole.systemInstall();
-    LOGGER.info("Starting server...");
-    Server server = new Server();
-    server.start();
-  }
+    public static void main(String[] args) throws IOException {
+        AnsiConsole.systemInstall();
+        LOGGER.info("Starting server...");
+        Server server = new Server();
+        server.start();
+    }
 }

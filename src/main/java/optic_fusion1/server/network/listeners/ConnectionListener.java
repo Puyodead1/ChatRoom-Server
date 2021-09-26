@@ -30,7 +30,7 @@ public record ConnectionListener(SocketServer server) implements ServerEventList
   @Override
   public void onSocketConnectionEstablished(ClientConnection client) {
     LOGGER.info(String.format("New connection from %s", client.getAddress()));
-    if (server.isLOGIN_REQUIRED() && !client.isLoggedIn()) {
+    if (server.isLoginRequired() && !client.isLoggedIn()) {
       client.sendPacket(new MessagePacket(OpCode.LOGIN_REQUIRED, "", MessagePacket.MessageChatType.SYSTEM));
     }
   }

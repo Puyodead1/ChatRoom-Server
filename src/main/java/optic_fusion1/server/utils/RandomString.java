@@ -24,7 +24,7 @@ public class RandomString {
     }
     this.random = Objects.requireNonNull(random);
     this.symbols = symbols.toCharArray();
-    buf = new char[length];
+    this.buf = new char[length];
   }
 
   /**
