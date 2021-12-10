@@ -19,13 +19,33 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.1.68.Final</version>
+            <version>4.1.70.Final</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-            <version>3.18.0</version>
+            <version>3.19.1</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jopt-simple</groupId>
+            <artifactId>jopt-simple</artifactId>
+            <version>6.0-alpha-3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>3.4.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.15.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.15.0</version>
         </dependency>
     </dependencies>
 
@@ -38,7 +58,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Built-By></Built-By>
+                            <Built-By>N/A</Built-By>
                         </manifestEntries>
                         <addMavenDescriptor>false</addMavenDescriptor>
                     </archive>
