@@ -7,7 +7,7 @@ import io.netty.handler.codec.protobuf.ProtobufDecoder;
 import io.netty.handler.codec.protobuf.ProtobufEncoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32LengthFieldPrepender;
-import optic_fusion1.server.protos.Packet;
+import optic_fusion1.common.protos.Packet;
 
 public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
     @Override

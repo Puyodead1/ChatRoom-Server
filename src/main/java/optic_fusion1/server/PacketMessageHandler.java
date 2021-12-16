@@ -2,7 +2,7 @@ package optic_fusion1.server;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import optic_fusion1.server.protos.Packet;
+import optic_fusion1.common.protos.Packet;
 
 public class PacketMessageHandler extends SimpleChannelInboundHandler<Packet> {
 
