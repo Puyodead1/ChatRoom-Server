@@ -1,12 +1,10 @@
 package optic_fusion1.server;
 
-import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.protobuf.ProtobufDecoder;
 import io.netty.handler.codec.protobuf.ProtobufEncoder;
 import io.netty.handler.codec.protobuf.ProtobufVarint32FrameDecoder;
@@ -16,22 +14,60 @@ import optic_fusion1.common.protos.ProtocolVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
+import java.io.IOException;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static optic_fusion1.common.RSAUtils.*;
+
 public class Server implements Runnable {
     private static final Logger LOGGER = LogManager.getLogger(Server.class);
-
-    private final PacketMessageHandler messageHandler = new PacketMessageHandler();
+    public static final ProtocolVersion PROTOCOL_VERSION = ProtocolVersion.VERSION_1;
+    // Key should be channel id as long text
+    public static final HashMap<String, Session> sessions = new HashMap<>();
     private boolean isRunning = false;
     private ExecutorService executor = null;
-    public final ProtocolVersion PROTOCOL_VERSION = ProtocolVersion.VERSION_001;
+    public final File dataDir;
+    public final KeyPair rsaKeyPair;
 
     public int port;
 
-    public Server(int port) {
+    public Server(int port) throws NoSuchAlgorithmException, NoSuchProviderException, IOException, InvalidKeySpecException {
         this.port = port;
+
+        this.dataDir = new File(System.getProperty("user.home"), ".chatroom-server");
+        if(!this.dataDir.exists()) {
+            this.dataDir.mkdir();
+        }
+
+        final File rsaPublicKeyPath = new File(this.dataDir, "server.pem");
+        final File rsaPrivateKeyPath = new File(this.dataDir, "server.key");
+
+        if(rsaPublicKeyPath.isFile() && rsaPrivateKeyPath.isFile()) {
+            // load keys
+            LOGGER.info("Loading RSA Key Pair...");
+            this.rsaKeyPair = loadRsaKeyPair(rsaPublicKeyPath, rsaPrivateKeyPath);
+            LOGGER.info("Loaded RSA Key Pair");
+        } else {
+            // generate new keys
+            LOGGER.info("Generating new RSA Key Pair...");
+            this.rsaKeyPair = generateRsaKeyPair();
+
+            // save keys
+            LOGGER.info("Saving RSA Key Pair...");
+            saveRsaKeyPair(this.rsaKeyPair, rsaPublicKeyPath, rsaPrivateKeyPath);
+            LOGGER.info(String.format("RSA Public Key File: %s", rsaPublicKeyPath));
+            LOGGER.info(String.format("RSA Private Key File: %s", rsaPrivateKeyPath));
+        }
+
+        LOGGER.info("Data Directory: %s".formatted(this.dataDir.toString()));
     }
 
     public synchronized void start() {
@@ -89,7 +125,7 @@ public class Server implements Runnable {
                     p.addLast(new ProtobufDecoder(Packet.getDefaultInstance()));
                     p.addLast(new ProtobufVarint32LengthFieldPrepender());
                     p.addLast(new ProtobufEncoder());
-                    p.addLast(messageHandler);
+                    p.addLast(new PacketMessageHandler());
                 }
             });
             b.option(ChannelOption.SO_BACKLOG, 128);
@@ -105,8 +141,4 @@ public class Server implements Runnable {
             bossGroup.shutdownGracefully();
         }
     }
-
-//    public ChannelFuture sendPacket(Packet packet) throws Exception {
-//        return messageHandler.sendPacket(packet);
-//    }
 }
