@@ -18,6 +18,8 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Objects;
 
+import static optic_fusion1.common.RSAUtils.verifySignature;
+
 public class ServerEventListener {
     private final Logger LOGGER = LogManager.getLogger(ServerEventListener.class);
     private final Server server;
@@ -34,6 +36,25 @@ public class ServerEventListener {
     @EventTarget
     public void onMessageReceived(final MessageReceivedEvent event) {
         final Packet.Type packetType = event.packet().getPacketType();
+
+        // Check for missing signature on packets
+        if(packetType != Packet.Type.HANDSHAKE_REQUEST) {
+            Packet packet = event.packet();
+            if(!packet.hasSignature()) {
+                // The signature field is required on all messages other than handshake requests and responses, send a validation error
+                LOGGER.error("[MessageReceived] [ValidationError] Packet is missing signature!");
+                ErrorPacket.Builder errorPacket = ErrorPacket.newBuilder();
+                errorPacket.setErrorType(ErrorPacket.Type.VALIDATION);
+                errorPacket.setDescription("The signature field is required, but was missing.");
+
+                Packet.Builder newPacket = Packet.newBuilder();
+                newPacket.setPacketType(Packet.Type.ERROR);
+                newPacket.setErrorData(errorPacket.build());
+
+                event.serverChannelHandlerContext().sendPacket(newPacket.build());
+                return;
+            }
+        }
 
         switch(packetType) {
             case HANDSHAKE_REQUEST -> EventManager.call(new HandshakeRequestEvent(event.serverChannelHandlerContext(), event.packet()));
@@ -84,7 +105,7 @@ public class ServerEventListener {
             LOGGER.error(String.format("Exception while creating session: %s", ex.getLocalizedMessage()));
 
             ErrorPacket.Builder errorPacket = ErrorPacket.newBuilder();
-            errorPacket.setErrorType(ErrorPacket.Type.UNKNOWN);
+            errorPacket.setErrorType(ErrorPacket.Type.SESSION);
             errorPacket.setDescription(ex.getLocalizedMessage());
 
             Packet.Builder packet = Packet.newBuilder();
