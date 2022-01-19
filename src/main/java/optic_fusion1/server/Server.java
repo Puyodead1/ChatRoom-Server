@@ -34,13 +34,15 @@ public class Server implements Runnable {
     public static final HashMap<String, Session> sessions = new HashMap<>();
     private boolean isRunning = false;
     private ExecutorService executor = null;
+    public final boolean authRequired;
     public final File dataDir;
     public final KeyPair rsaKeyPair;
 
     public int port;
 
-    public Server(int port) throws NoSuchAlgorithmException, NoSuchProviderException, IOException, InvalidKeySpecException {
+    public Server(int port, boolean authRequired) throws NoSuchAlgorithmException, NoSuchProviderException, IOException, InvalidKeySpecException {
         this.port = port;
+        this.authRequired = authRequired;
 
         this.dataDir = new File(System.getProperty("user.home"), ".chatroom-server");
         if(!this.dataDir.exists()) {

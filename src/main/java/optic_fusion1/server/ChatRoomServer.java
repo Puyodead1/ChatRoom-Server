@@ -18,6 +18,7 @@ public class ChatRoomServer {
         OptionParser optionParser = new OptionParser();
         OptionSpec<Void> helpSpec = optionParser.accepts("help").forHelp();
         OptionSpec<Integer> portSpec = optionParser.accepts("port", "Server port").withOptionalArg().ofType(Integer.class).defaultsTo(8888);
+        OptionSpec<Boolean> authRequiredSpec = optionParser.accepts("authentication-required", "Whether users are required to login to this server").withOptionalArg().ofType(Boolean.class).defaultsTo(true);
 
         try {
             OptionSet optionSet = optionParser.parse(args);
@@ -28,9 +29,10 @@ public class ChatRoomServer {
             }
 
             int serverPort = optionSet.valueOf(portSpec);
+            boolean authRequired = optionSet.valueOf(authRequiredSpec);
 
             try {
-                Server server = new Server(serverPort);
+                Server server = new Server(serverPort, authRequired);
 
                 ServerEventListener eventListener = new ServerEventListener(server);
                 EventManager.register(eventListener);
