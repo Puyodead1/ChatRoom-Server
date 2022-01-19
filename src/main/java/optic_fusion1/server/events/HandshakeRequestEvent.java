@@ -12,7 +12,8 @@ import java.security.spec.InvalidKeySpecException;
 
 import static optic_fusion1.common.RSAUtils.getPublicKeyFromBytes;
 
-public record HandshakeRequestEvent(ServerChannelHandlerContext serverChannelHandlerContext, Packet packet) implements IEvent {
+public record HandshakeRequestEvent(ServerChannelHandlerContext serverChannelHandlerContext,
+                                    Packet packet) implements IEvent {
     public HandshakeRequest getHandshakeRequestData() throws InvalidProtocolBufferException {
         final byte[] packetData = this.packet.getData().toByteArray();
         return HandshakeRequest.parseFrom(packetData);

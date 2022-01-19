@@ -28,31 +28,30 @@ import java.util.concurrent.TimeUnit;
 import static optic_fusion1.common.RSAUtils.*;
 
 public class Server implements Runnable {
-    private static final Logger LOGGER = LogManager.getLogger(Server.class);
     public static final ProtocolVersion PROTOCOL_VERSION = ProtocolVersion.VERSION_1;
     // Key should be channel id as long text
     public static final HashMap<String, Session> sessions = new HashMap<>();
-    private boolean isRunning = false;
-    private ExecutorService executor = null;
+    private static final Logger LOGGER = LogManager.getLogger(Server.class);
     public final boolean authRequired;
     public final File dataDir;
     public final KeyPair rsaKeyPair;
-
     public int port;
+    private boolean isRunning = false;
+    private ExecutorService executor = null;
 
     public Server(int port, boolean authRequired) throws NoSuchAlgorithmException, NoSuchProviderException, IOException, InvalidKeySpecException {
         this.port = port;
         this.authRequired = authRequired;
 
         this.dataDir = new File(System.getProperty("user.home"), ".chatroom-server");
-        if(!this.dataDir.exists()) {
+        if (!this.dataDir.exists()) {
             this.dataDir.mkdir();
         }
 
         final File rsaPublicKeyPath = new File(this.dataDir, "server.pem");
         final File rsaPrivateKeyPath = new File(this.dataDir, "server.key");
 
-        if(rsaPublicKeyPath.isFile() && rsaPrivateKeyPath.isFile()) {
+        if (rsaPublicKeyPath.isFile() && rsaPrivateKeyPath.isFile()) {
             // load keys
             LOGGER.info("Loading RSA Key Pair...");
             this.rsaKeyPair = loadRsaKeyPair(rsaPublicKeyPath, rsaPrivateKeyPath);
@@ -73,7 +72,7 @@ public class Server implements Runnable {
     }
 
     public synchronized void start() {
-        if(!isRunning) {
+        if (!isRunning) {
             executor = Executors.newFixedThreadPool(1);
             executor.execute(this);
             isRunning = true;
@@ -83,13 +82,13 @@ public class Server implements Runnable {
     public synchronized boolean stop() {
         LOGGER.info("Shutting down");
         boolean bReturn = true;
-        if(isRunning) {
-            if(executor != null) {
+        if (isRunning) {
+            if (executor != null) {
                 executor.shutdown();
                 try {
                     executor.shutdownNow();
-                    if(executor.awaitTermination(calcTime(10, 0.66667), TimeUnit.SECONDS)) {
-                        if(!executor.awaitTermination(calcTime(10, 0.33334), TimeUnit.SECONDS)) {
+                    if (executor.awaitTermination(calcTime(10, 0.66667), TimeUnit.SECONDS)) {
+                        if (!executor.awaitTermination(calcTime(10, 0.33334), TimeUnit.SECONDS)) {
                             bReturn = false;
                         }
                     }

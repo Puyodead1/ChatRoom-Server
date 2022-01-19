@@ -5,7 +5,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.ReferenceCountUtil;
 import net.lenni0451.asmevents.EventManager;
 import optic_fusion1.common.protos.Packet;
-import optic_fusion1.server.events.ClientConnectionEvent;
 import optic_fusion1.server.events.MessageReceivedEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

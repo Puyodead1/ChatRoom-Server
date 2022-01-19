@@ -12,7 +12,7 @@ public record ClientConnectionEvent(ServerChannelHandlerContext serverChannelHan
     }
 
     public Channel getChannel() {
-        return  this.getChannelHandlerContext().channel();
+        return this.getChannelHandlerContext().channel();
     }
 
     public ChannelId getChannelId() {

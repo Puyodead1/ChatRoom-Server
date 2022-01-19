@@ -34,7 +34,7 @@ public class ServerEventListener {
 
     @EventTarget
     public void onClientConnection(final ClientConnectionEvent event) {
-        LOGGER.info(String.format("[Client Connection] Client %s connected from %s",  event.getChannelId().asShortText(), event.getChannel().remoteAddress().toString()));
+        LOGGER.info(String.format("[Client Connection] Client %s connected from %s", event.getChannelId().asShortText(), event.getChannel().remoteAddress().toString()));
     }
 
     @EventTarget
@@ -42,13 +42,13 @@ public class ServerEventListener {
         final Packet.Type packetType = event.packet().getPacketType();
 
         // Check for missing signature on packets
-        if(packetType != Packet.Type.HANDSHAKE_REQUEST) {
+        if (packetType != Packet.Type.HANDSHAKE_REQUEST) {
             Packet packet = event.packet();
-            if(!packet.hasSignature()) {
+            if (!packet.hasSignature()) {
                 // The signature field is required on all messages other than handshake requests and responses, send a validation error
                 LOGGER.error("[MessageReceived] [ValidationError] Packet is missing signature!");
 
-                final  ErrorPacket.Builder errorPacket = ErrorPacket.newBuilder();
+                final ErrorPacket.Builder errorPacket = ErrorPacket.newBuilder();
                 errorPacket.setErrorType(ErrorPacket.Type.VALIDATION);
                 errorPacket.setDescription("The signature field is required, but was missing.");
 
@@ -63,7 +63,7 @@ public class ServerEventListener {
             // TODO: validate session id and get session
         }
 
-        switch(packetType) {
+        switch (packetType) {
             case HANDSHAKE_REQUEST -> EventManager.call(new HandshakeRequestEvent(event.serverChannelHandlerContext(), event.packet()));
             case AUTHENTICATION_REQUEST -> EventManager.call(new AuthenticationRequestEvent(server, event.serverChannelHandlerContext(), event.packet()));
             default -> LOGGER.warn(String.format("[Message Receive] Received an unknown packet type: %s", event.packet()));
@@ -124,7 +124,7 @@ public class ServerEventListener {
     public void onAuthenticationRequest(final AuthenticationRequestEvent event) {
         try {
             LOGGER.info(String.format("[AuthenticationRequest] Got authentication request for session: %s; username: %s; password: %s", event.getRequestData().getSessionId(), event.getRequestData().getUsername(), event.getRequestData().getPassword()));
-        } catch(InvalidKeyException | InvalidProtocolBufferException | NoSuchPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | BadPaddingException ex) {
+        } catch (InvalidKeyException | InvalidProtocolBufferException | NoSuchPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | BadPaddingException ex) {
             LOGGER.error(String.format("[AuthenticationRequest] Exception caught while trying to parse authentication packet: %s", ex.getLocalizedMessage()));
         }
     }
